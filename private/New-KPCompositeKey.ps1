@@ -34,7 +34,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [securestring]$MasterPassword = $null,
 
@@ -45,7 +45,7 @@
 
     Begin {
         # Check at least one authentication method has been used
-        If ((-not $MasterPassword) -and (-not $KeyFile) -and (-not $UseWindowsUserAccount.IsPresent)) {
+        If ((-not $MasterPassword) -and (-not $KeyFile) -and (-not $UseWindowsUserAccount)) {
             Throw 'At least one authentication method must be used'
         }
     }
@@ -79,7 +79,11 @@
             )
         }
 
-        Return $compositeKey
+        If ($PSCmdlet.ShouldProcess('Composite Key', 'Create New')) {
+            Return $compositeKey
+        }
+
+        Return $null
     }
 
     End {

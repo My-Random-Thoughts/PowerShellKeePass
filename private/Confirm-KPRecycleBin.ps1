@@ -47,7 +47,7 @@
 
     If ($newRecycleBin -eq $KeePassDatabase.RootGroup) {
         Write-Warning -Message 'Unable to use the root folder as the recycle bin, using default location'
-        $Group -eq $null
+        $Group = $null
     }
 
 # PROCESS
@@ -61,9 +61,9 @@
         $KeePassDatabase.RootGroup.AddGroup($newRecycleBin, $true)
     }
 
-    $newRecycleBin.EnableAutoType  = $false
-    $newRecycleBin.EnableSearching = $false
-    $KeePassDatabase.RecycleBinUuid = $newRecycleBin.Uuid
+    $newRecycleBin.EnableAutoType      = $false
+    $newRecycleBin.EnableSearching     = $false
+    $KeePassDatabase.RecycleBinUuid    = $newRecycleBin.Uuid
     $KeePassDatabase.RecycleBinChanged = (Get-Date)
     $KeePassDatabase.Save($null)
 
