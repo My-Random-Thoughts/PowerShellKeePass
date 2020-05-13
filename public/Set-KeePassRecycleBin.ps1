@@ -25,7 +25,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
@@ -48,7 +48,9 @@
     }
 
     Process {
-        Confirm-KPRecycleBin -KeePassDatabase $KeePassDatabase -Group $RecycleBinGroup
+        If ($PSCmdlet.ShouldProcess($($newRecycleBin.Name), 'Set As KeePass Recycle Bin')) {
+            Confirm-KPRecycleBin -KeePassDatabase $KeePassDatabase -Group $RecycleBinGroup
+        }
     }
 
     End {

@@ -28,7 +28,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
@@ -54,18 +54,20 @@
 
     Process {
         [void]$retSource.ParentGroup.Entries.Remove($retSource)
+        [string]$entryPath = "/$($retSource.ParentGroup.GetFullPath('/', $false))/$($retSource.Strings.ReadSafe('Title'))"
 
         If ($Force -eq $true) {
-            Write-Verbose -Message "Permanently deleting: '/$($retSource.ParentGroup.GetFullPath('/', $false))/$($retSource.Strings.ReadSafe('Title'))'"
-            $deletedObject = (New-Object -TypeName 'KeePassLib.PwDeletedObject'($retSource.Uuid, $(Get-Date)))
-            $KeePassDatabase.DeletedObjects.Add($deletedObject)
+            If ($PSCmdlet.ShouldProcess($entryPath, 'Permanently deleting')) {
+                $deletedObject = (New-Object -TypeName 'KeePassLib.PwDeletedObject'($retSource.Uuid, $(Get-Date)))
+                $KeePassDatabase.DeletedObjects.Add($deletedObject)
+            }
         }
         Else {
-            $kpRecycleBin = (Confirm-KPRecycleBin -KeePassDatabase $KeePassDatabase)
-            Write-Verbose -Message "Moving to recycle bin: '/$($retSource.ParentGroup.GetFullPath('/', $false))/$($retSource.Strings.ReadSafe('Title'))'"
-            
-            $kpRecycleBin.AddEntry($retSource, $true, $true)
-            $retSource.Touch($false)
+            If ($PSCmdlet.ShouldProcess($entryPath, 'Moving to recycle bin')) {
+                $kpRecycleBin = (Confirm-KPRecycleBin -KeePassDatabase $KeePassDatabase)
+                $kpRecycleBin.AddEntry($retSource, $true, $true)
+                $retSource.Touch($false)
+            }
         }
 
         $KeePassDatabase.Save($null)

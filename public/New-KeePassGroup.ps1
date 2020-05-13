@@ -37,7 +37,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
@@ -71,23 +71,25 @@
     }
 
     Process {
-        $KeePassGroup.Name = $Name
-        $KeePassGroup.Uuid = [KeePassLib.PwUuid]::New($true)
+        If ($PSCmdlet.ShouldProcess($Name, 'Creating new group')) {
+            $KeePassGroup.Name = $Name
+            $KeePassGroup.Uuid = [KeePassLib.PwUuid]::New($true)
 
-        If ($null -ne $Icon)  { $KeePassGroup.IconId = $Icon }
-        If ($null -ne $Notes) { $KeePassGroup.Notes  = $Notes }
-        If ($ExpiryDate -gt ([datetime]::MinValue)) {
-            $KeePassGroup.Expires = $true
-            $KeePassGroup.ExpiryTime = $ExpiryDate
-        }
+            If ($null -ne $Icon)  { $KeePassGroup.IconId = $Icon }
+            If ($null -ne $Notes) { $KeePassGroup.Notes  = $Notes }
+            If ($ExpiryDate -gt ([datetime]::MinValue)) {
+                $KeePassGroup.Expires = $true
+                $KeePassGroup.ExpiryTime = $ExpiryDate
+            }
 
-        $newParentGroup.AddGroup($KeePassGroup, $true, $false)
-        $newParentGroup.Touch($true, $true)
-        $KeePassDatabase.Save($null)
-        Write-Verbose -Message "Added new group: $Name"
+            $newParentGroup.AddGroup($KeePassGroup, $true, $false)
+            $newParentGroup.Touch($true, $true)
+            $KeePassDatabase.Save($null)
+            Write-Verbose -Message "Added new group: $Name"
 
-        If ($PassThru.IsPresent) {
-            Return $KeePassGroup    # Always return as a [KeePassLib.PwGroup] object
+            If ($PassThru.IsPresent) {
+                Return $KeePassGroup    # Always return as a [KeePassLib.PwGroup] object
+            }
         }
     }
 

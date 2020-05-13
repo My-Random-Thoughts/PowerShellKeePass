@@ -76,6 +76,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Scope = 'Function')]
     [CmdletBinding(DefaultParameterSetName = 'CharSet')]
     Param (
         [Parameter(ParameterSetName = 'CharSet')]

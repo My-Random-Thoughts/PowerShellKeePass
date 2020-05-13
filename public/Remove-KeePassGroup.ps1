@@ -28,7 +28,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
@@ -57,25 +57,28 @@
 
     Process {
         [void]$retSource.ParentGroup.Groups.Remove($retSource)
+        [string]$groupPath = "/$($retSource.GetFullPath('/', $false))"
 
         If ($Force -eq $true) {
-            Write-Verbose -Message "Permanently deleting: '/$($retSource.GetFullPath('/', $false))'"
-            $retSource.DeleteAllObjects($KeePassDatabase)
-            $deletedObject = (New-Object -TypeName 'KeePassLib.PwDeletedObject'($retSource.Uuid, $(Get-Date)))
-            $KeePassDatabase.DeletedObjects.Add($deletedObject)
+            If ($PSCmdlet.ShouldProcess($groupPath, 'Permanently deleting')) {
+                $retSource.DeleteAllObjects($KeePassDatabase)
+                $deletedObject = (New-Object -TypeName 'KeePassLib.PwDeletedObject'($retSource.Uuid, $(Get-Date)))
+                $KeePassDatabase.DeletedObjects.Add($deletedObject)
+            }
         }
         Else {
-            $kpRecycleBin = (Confirm-KPRecycleBin -KeePassDatabase $KeePassDatabase)
-            Write-Verbose -Message "Moving to recycle bin: '/$($retSource.GetFullPath('/', $false))'"
-            Try {
-                $kpRecycleBin.AddGroup($retSource, $true, $true)
-            }
-            Catch {
-                $retSource.ParentGroup.AddGroup($retSource)
-                Write-Warning -Message $($_.Exception.Message)
-            }
+            If ($PSCmdlet.ShouldProcess($groupPath, 'Moving to recycle bin')) {
+                $kpRecycleBin = (Confirm-KPRecycleBin -KeePassDatabase $KeePassDatabase)
+                Try {
+                    $kpRecycleBin.AddGroup($retSource, $true, $true)
+                }
+                Catch {
+                    $retSource.ParentGroup.AddGroup($retSource)
+                    Write-Warning -Message $($_.Exception.Message)
+                }
 
-            $retSource.Touch($false)
+                $retSource.Touch($false)
+            }
         }
 
         $KeePassDatabase.Save($null)

@@ -46,7 +46,6 @@
         [string[]]$Name,
 
         [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -Path $_ })]
         [string]$Path,
 
         [Parameter(ParameterSetName = 'overwrite')]

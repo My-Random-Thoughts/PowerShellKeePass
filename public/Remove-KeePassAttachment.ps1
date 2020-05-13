@@ -25,7 +25,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding(DefaultParameterSetName = '__default')]
+    [CmdletBinding(DefaultParameterSetName = '__default', SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
@@ -53,7 +53,9 @@
                 Continue
             }
 
-            [void]$currEntry.Binaries.Remove($item)
+            If ($PSCmdlet.ShouldProcess($item, 'Removing entry attachment')) {
+                [void]$currEntry.Binaries.Remove($item)
+            }
         }
 
         $currEntry.Touch($true)

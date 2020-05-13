@@ -71,7 +71,6 @@
         $retDestination.AddGroup($dupGroup, $true, $true)
         $retDestination.Touch($true, $true)
 
-        [KeePassLib.PwEntry]$entry = $null
         ForEach ($dupEntry In $dupGroup.GetEntries($true)) {
             If ($AppendCopyToTitle.IsPresent) {
                 [string]$title = "$($dupEntry.Strings.ReadSafe('Title')) - Copy"

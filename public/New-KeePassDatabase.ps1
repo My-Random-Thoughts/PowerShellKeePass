@@ -28,7 +28,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [ValidateScript({ -not (Test-Path -Path $_) })]
         [string]$FilePath,
@@ -49,20 +49,21 @@
 
         # Set up the required variables
         $PwDatabase     = (New-Object -TypeName 'KeePassLib.PwDatabase')
-        $compositeKey   = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount $UseWindowsUserAccount.IsPresent)
+        $compositeKey   = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount $($UseWindowsUserAccount.IsPresent))
         $connectionInfo = (New-Object -TypeName 'KeePassLib.Serialization.IOConnectionInfo')
         $connectionInfo.Path = $FilePath
     }
 
     Process {
         Try {
-            Write-Verbose -Message 'Creating KeePass database file'
-            $PwDatabase.New($connectionInfo, $compositeKey) | Out-Null
-            $PwDatabase.Save($null)
-            Write-Verbose -Message 'KeePass database created successfully'
+            If ($PSCmdlet.ShouldProcess($FilePath, 'Creating new KeePass database')) {
+                $PwDatabase.New($connectionInfo, $compositeKey) | Out-Null
+                $PwDatabase.Save($null)
+                Write-Verbose -Message 'KeePass database created successfully'
 
-            $KeePassDatabase = (Open-KeePassDatabase -FilePath $FilePath -CompositeKey $compositeKey)
-            Return $KeePassDatabase
+                $KeePassDatabase = (Open-KeePassDatabase -FilePath $FilePath -CompositeKey $compositeKey)
+                Return $KeePassDatabase
+            }
         }
         Catch {
             Throw $_

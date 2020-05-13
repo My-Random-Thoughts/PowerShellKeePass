@@ -44,8 +44,8 @@
     Process {
         If ($RemoveGroup.IsPresent) {
             [KeePassLib.PwGroup]$kpRecycleBin = $($KeePassDatabase.RootGroup.FindGroup($KeePassDatabase.RecycleBinUuid, $true))
-            Empty-KeePassRecycleBin -KeePassDatabase $KeePassDatabase
-            Remove-KeePassGroup     -KeePassDatabase $KeePassDatabase -Group $kpRecycleBin -ForceRemove
+            Clear-KeePassRecycleBin -KeePassDatabase $KeePassDatabase
+            Remove-KeePassGroup     -KeePassDatabase $KeePassDatabase -Group $kpRecycleBin -Force
             $KeePassDatabase.RecycleBinUuid = [KeePassLib.PwUuid]::Zero
         }
 

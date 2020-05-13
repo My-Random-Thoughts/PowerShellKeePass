@@ -18,6 +18,9 @@
     .PARAMETER UseWindowsUserAccount
         If set to $true, will use the currently logged on user account to help unlock a database
 
+    .PARAMETER CompositeKey
+        Specifies a fully complete composite key instead of separated values
+
     .EXAMPLE
         Open-KeePassDatabase -FilePath 'C:\SecureLocation\Database.kdbx' -MasterPassword 'Passw0rd!23' -KeeFile 'C:\SecureLocation\KeeFile.txt'
 

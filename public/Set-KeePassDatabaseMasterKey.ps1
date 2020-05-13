@@ -28,7 +28,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
@@ -49,10 +49,12 @@
 
     Process {
         Try {
-            $KeePassDatabase.MasterKey = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount $UseWindowsUserAccount.IsPresent)
-            $KeePassDatabase.MasterKeyChanged = (Get-Date)
-            $KeePassDatabase.Save($null)
-            Write-Verbose -Message 'Master password has been changed'
+            If ($PSCmdlet.ShouldProcess('Database Master Key', 'Setting new master key')) {
+                $KeePassDatabase.MasterKey = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount $UseWindowsUserAccount.IsPresent)
+                $KeePassDatabase.MasterKeyChanged = (Get-Date)
+                $KeePassDatabase.Save($null)
+                Write-Verbose -Message 'Master password has been changed'
+            }
         }
         Catch {
             Throw $_

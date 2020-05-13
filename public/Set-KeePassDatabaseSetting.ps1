@@ -76,7 +76,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding(DefaultParameterSetName = '__default')]
+    [CmdletBinding(DefaultParameterSetName = '__default', SupportsShouldProcess)]
     [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingUserNameAndPassWordParams', '', Scope = 'Function')]    # False positive
     Param (
         [Parameter(Mandatory = $true)]
@@ -210,13 +210,13 @@
                 'Colour' {
                     If ($paramValue -eq 'None') { [System.Drawing.Color]$nColour = 0 } Else { [System.Drawing.Color]$nColour = $paramValue }
                     If ($KeePassDatabase.Color.Name -ne $nColour.Name) {
-                        Write-Verbose -Message "Changing: $param to '$paramValue'"
-                        $KeePassDatabase.Color = $nColour
+                        If ($PSCmdlet.ShouldProcess('Database Settings', "Changing $param to $paramValue")) {
+                            $KeePassDatabase.Color = $nColour
+                        }
                     }
                 }
 
                 'UseRecycleBin' {
-                    Write-Verbose -Message "Changing: $param to '$paramValue'"
                     If ($paramValue -eq $true) {
                         Enable-KeePassRecycleBin -KeePassDatabase $KeePassDatabase
                     }
@@ -227,23 +227,27 @@
 
                 'EncryptionCipher' {
                     If ($EncryptionCipher -ne ($currCipher.Split(' ')[0])) {
-                        Write-Verbose -Message "Changing: $param to '$paramValue'"
-                        $globalPool = ([KeePassLib.Cryptography.Cipher.CipherPool]::GlobalPool)
-                        1..($globalPool.EngineCount) | ForEach-Object {
-                            If (($globalPool.Item($_ -1).DisplayName) -like "$EncryptionCipher*") {
-                                $KeePassDatabase.DataCipherUuid = (([KeePassLib.Cryptography.Cipher.CipherPool]::GlobalPool).Item($_ - 1).CipherUuid)
+                        If ($PSCmdlet.ShouldProcess('Database Settings', "Changing $param to $paramValue")) {
+                            $globalPool = ([KeePassLib.Cryptography.Cipher.CipherPool]::GlobalPool)
+                            1..($globalPool.EngineCount) | ForEach-Object {
+                                If (($globalPool.Item($_ -1).DisplayName) -like "$EncryptionCipher*") {
+                                    $KeePassDatabase.DataCipherUuid = (([KeePassLib.Cryptography.Cipher.CipherPool]::GlobalPool).Item($_ - 1).CipherUuid)
+                                }
                             }
                         }
                     }
                 }
 
-                {($_ -eq 'UseAesKdf') -or 
+                {($_ -eq 'UseAesKdf') -or
                  ($_ -eq 'UseArgon2')} {
                     If ($currKdfEngineName -ne $KeyDerivationFunction) {
-                        Write-Verbose -Message "Changing: $param to '$paramValue'"
-                        [KeePassLib.PwUuid]$engineUuid = (([KeePassLib.Cryptography.KeyDerivation.KdfPool]::Engines) | Where-Object { $_.Name -eq $KeyDerivationFunction}).Uuid
-                        $KeePassDatabase.KdfParameters = (Get-KPKDFOneSecondInteration -KeyDerivationFunction $KeyDerivationFunction -UseDefaultValues)
-                        If ($KeyIterations -eq -1) { $KeePassDatabase.KdfParameters = $generatedKdfParameters }
+                        If ($PSCmdlet.ShouldProcess('Database Settings', "Changing $param to $paramValue")) {
+                            [KeePassLib.PwUuid]$engineUuid = (([KeePassLib.Cryptography.KeyDerivation.KdfPool]::Engines) | Where-Object { $_.Name -eq $KeyDerivationFunction}).Uuid
+                            $KeePassDatabase.KdfParameters = (Get-KPKDFOneSecondInteration -KeyDerivationFunction $KeyDerivationFunction -UseDefaultValues)
+                            If ($KeyIterations -eq -1) {
+                                $KeePassDatabase.KdfParameters = $generatedKdfParameters
+                            }
+                        }
                     }
                 }
 
@@ -253,11 +257,12 @@
                     }
                     Else {
                         If (($KeyIterations -ne $kdfParam_R) -and ($KeyIterations -ne $kdfParam_I)) {
-                            Write-Verbose -Message "Changing: $param to '$paramValue'"
-                            Switch ($KeyDerivationFunction) {
-                                'Aes-Kdf' { $KeePassDatabase.KdfParameters.SetUInt64('R', ($KeyIterations -as [uint64])) }
-                                'Argon2'  { $KeePassDatabase.KdfParameters.SetUInt64('I', ($KeyIterations -as [uint64])) }
-                                Default   { Throw "Invalid KeyDerivationFunction: $KeyDerivationFunction" }
+                            If ($PSCmdlet.ShouldProcess('Database Settings', "Changing $param to $paramValue")) {
+                                Switch ($KeyDerivationFunction) {
+                                    'Aes-Kdf' { $KeePassDatabase.KdfParameters.SetUInt64('R', ($KeyIterations -as [uint64])) }
+                                    'Argon2'  { $KeePassDatabase.KdfParameters.SetUInt64('I', ($KeyIterations -as [uint64])) }
+                                    Default   { Throw "Invalid KeyDerivationFunction: $KeyDerivationFunction" }
+                                }
                             }
                         }
                     }
@@ -267,25 +272,27 @@
                     If ($KeyIterations -eq -1) { Continue }
                     $Argon2Memory = ($Argon2Memory * 1MB)
                     If ($Argon2Memory -ne $kdfParam_M) {
-                        Write-Verbose -Message "Changing: $param from '$kdfParam_M' to '$paramValue'"
-                        $KeePassDatabase.KdfParameters.SetUInt64('M', ($Argon2Memory -as [uint64]))
+                        If ($PSCmdlet.ShouldProcess('Database Settings', "Changing $param to $paramValue")) {
+                            $KeePassDatabase.KdfParameters.SetUInt64('M', ($Argon2Memory -as [uint64]))
+                        }
                     }
                 }
 
                 'Argon2Parallelism' {
                     If ($KeyIterations -eq -1) { Continue }
                     If ($Argon2Parallelism -ne $kdfParam_P) {
-                        Write-Verbose -Message "Changing: $param from '$kdfParam_P' to '$paramValue'"
-                        $KeePassDatabase.KdfParameters.SetUInt32('P', ($Argon2Parallelism -as [uint32]))
+                        If ($PSCmdlet.ShouldProcess('Database Settings', "Changing $param to $paramValue")) {
+                            $KeePassDatabase.KdfParameters.SetUInt32('P', ($Argon2Parallelism -as [uint32]))
+                        }
                     }
                 }
 
                 Default {
                     If ($KeePassDatabase.$lookupItem -ne $paramValue) {
-                        Write-Verbose -Message "Changing: $param to '$paramValue'"
-
-                        $KeePassDatabase.$lookupItem = $paramValue
-                        If ($changed) { $KeePassDatabase.$changed = (Get-Date) }
+                        If ($PSCmdlet.ShouldProcess('Database Settings', "Changing $param to $paramValue")) {
+                            $KeePassDatabase.$lookupItem = $paramValue
+                            If ($changed) { $KeePassDatabase.$changed = (Get-Date) }
+                        }
                     }
                 }
             }

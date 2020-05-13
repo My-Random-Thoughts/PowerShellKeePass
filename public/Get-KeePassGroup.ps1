@@ -56,14 +56,14 @@
             Throw 'The KeePass database specified is not open'
         }
 
-        [KeePassLib.PwGroup[]]$groups = $KeePassDatabase.RootGroup
-        If (($Path) -and (-not $Path.StartsWith($($KeePassDatabase.RootGroup.Name)))) {
-            $Path = "$($KeePassDatabase.RootGroup.Name)/$($Path.Trim('/'))"
+        [KeePassLib.PwGroup[]]$rootGroup = $KeePassDatabase.RootGroup
+        If (($Path) -and (-not $Path.StartsWith($($rootGroup.Name)))) {
+            $Path = "$($rootGroup.Name)/$($Path.Trim('/'))"
         }
     }
 
     Process {
-        $KeePassDatabase.RootGroup.GetGroups($true) | ForEach-Object {
+        $rootGroup.GetGroups($true) | ForEach-Object {
 
             [string]$itemName = ($_.Name)
             [string]$itemPath = ($_.GetFullPath('/', $true).ToLower())

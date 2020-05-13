@@ -46,7 +46,7 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
@@ -91,27 +91,29 @@
     }
 
     Process {
-        $KeePassEntry.Strings.Set('Title',    (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $Title   )))
-        $KeePassEntry.Strings.Set('UserName', (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $UserName)))
-        $KeePassEntry.Uuid = [KeePassLib.PwUuid]::New($true)
+        If ($PSCmdlet.ShouldProcess($Title, 'Creating new entry')) {
+            $KeePassEntry.Strings.Set('Title',    (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $Title   )))
+            $KeePassEntry.Strings.Set('UserName', (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $UserName)))
+            $KeePassEntry.Uuid = [KeePassLib.PwUuid]::New($true)
 
-        If ($Icon)     { $KeePassEntry.IconId = $Icon  }
-        If ($Notes)    { $KeePassEntry.Notes  = $Notes }
-        If ($PlainPwd) { $KeePassEntry.Strings.Set('Password', (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $PlainPwd))) }
-        If ($Url)      { $KeePassEntry.Strings.Set('Url',      (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $Url     ))) }
+            If ($Icon)     { $KeePassEntry.IconId = $Icon  }
+            If ($Notes)    { $KeePassEntry.Notes  = $Notes }
+            If ($PlainPwd) { $KeePassEntry.Strings.Set('Password', (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $PlainPwd))) }
+            If ($Url)      { $KeePassEntry.Strings.Set('Url',      (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $Url     ))) }
 
-        If ($ExpiryDate -gt ([datetime]::MinValue)) {
-            $KeePassEntry.Expires = $true
-            $KeePassEntry.ExpiryTime = $ExpiryDate
-        }
+            If ($ExpiryDate -gt ([datetime]::MinValue)) {
+                $KeePassEntry.Expires = $true
+                $KeePassEntry.ExpiryTime = $ExpiryDate
+            }
 
-        $newParentGroup.AddEntry($KeePassEntry, $true, $false)
-        $newParentGroup.Touch($true, $true)
-        $KeePassDatabase.Save($null)
-        Write-Verbose -Message "Added new entry: $Title"
+            $newParentGroup.AddEntry($KeePassEntry, $true, $false)
+            $newParentGroup.Touch($true, $true)
+            $KeePassDatabase.Save($null)
+            Write-Verbose -Message "Added new entry: $Title"
 
-        If ($PassThru.IsPresent) {
-            Return $KeePassEntry    # Always return as a [KeePassLib.PwEntry] object
+            If ($PassThru.IsPresent) {
+                Return $KeePassEntry    # Always return as a [KeePassLib.PwEntry] object
+            }
         }
     }
 
