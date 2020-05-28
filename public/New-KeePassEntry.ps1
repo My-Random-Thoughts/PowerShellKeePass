@@ -97,7 +97,7 @@
             $KeePassEntry.Uuid = [KeePassLib.PwUuid]::New($true)
 
             If ($Icon)     { $KeePassEntry.IconId = $Icon  }
-            If ($Notes)    { $KeePassEntry.Notes  = $Notes }
+            If ($Notes)    { $KeePassEntry.Strings.Set('Notes',    (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $Notes   ))) }
             If ($PlainPwd) { $KeePassEntry.Strings.Set('Password', (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $PlainPwd))) }
             If ($Url)      { $KeePassEntry.Strings.Set('Url',      (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $Url     ))) }
 
