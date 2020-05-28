@@ -38,6 +38,8 @@
         If ($KeePassDatabase.IsOpen -eq $false) {
             Throw 'The KeePass database specified is not open'
         }
+
+        If ($InputObject -eq '/') { $InputObject = $KeePassDatabase.RootGroup }
     }
 
     Process {
