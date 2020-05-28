@@ -4,23 +4,32 @@ Clear-Host
 
 # Variable Setup
 While ($true) {
-    [string]$dbPath = "$env:temp\PowerShellKeePass.$([guid]::NewGuid()).kdbx"
-    If (-not (Test-Path -Path $dbPath)) { Break }
+    [string]$dbName = "$env:temp\PowerShellKeePass.$([guid]::NewGuid())"
+    If (-not (Test-Path -Path $dbName)) { Break }
 }
 
-$dbPassword = 'P0werShellKeePa55!'
-$dbPasswordSecure = (ConvertTo-SecureString -String $dbPassword -AsPlainText -Force)
+Import-Module -Name 'PowerShellKeePass'
+[string]$path = ((Get-Module -Name 'PowerShellKeePass').ModuleBase)
+. "$path\private\Test-KPIsValidEntry.ps1"    # Required for tests when
+. "$path\private\Test-KPIsValidGroup.ps1"    # editing entries and groups
+
 
 Describe -Name 'PowerShellKeePass Tests' -Fixture {
-    $script:kpDB = $null
+[object]$script:kpDB = $null
 
-    Context -Name 'Import Module And Create New Database' -Fixture {
-        It -Name 'Import PowerShellKeePass Module' -Test {
-            Import-Module -Name 'C:\My Stuff\Development\PowerShell\Modules (WorkingOn)\PowerShellKeePass\PowerShellKeePass.psm1'
+    Context -Name 'Create New Databases' -Fixture {
+        It -Name 'Create New KeePass Database Using A Password' -Test {
+            $script:kpDB = (New-KeePassDatabase -FilePath "$($dbName)-Password.kdbx" -MasterPassword (ConvertTo-SecureString -String 'Passw0rd!' -AsPlainText -Force))
+            $script:kpDB | Should -BeOfType 'KeePassLib.PwDatabase'
         }
 
-        It -Name 'Create New KeePass Database' -Test {
-            $script:kpDB = (New-KeePassDatabase -FilePath $dbPath -MasterPassword $dbPasswordSecure)
+        It -Name 'Create New KeePass Database Using A Key File' -Test {
+            $script:kpDB = (New-KeePassDatabase -FilePath "$($dbName)-KeyFile.kdbx" -KeyFile "$env:windir\win.ini")
+            $script:kpDB | Should -BeOfType 'KeePassLib.PwDatabase'
+        }
+
+        It -Name 'Create New KeePass Database Using A Windows User Account' -Test {
+            $script:kpDB = (New-KeePassDatabase -FilePath "$($dbName)-WinAccount.kdbx" -UseWindowsUserAccount)
             $script:kpDB | Should -BeOfType 'KeePassLib.PwDatabase'
         }
     }
@@ -38,7 +47,7 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
             @{Name = 'Group 221'; Parent = '/Group 02/Group 22'}
         )
 
-        It -Name 'Creating "<Name>" under "<Parent>"' -TestCases $groups -Test {
+        It -Name 'Creating "<Name>" Under "<Parent>"' -TestCases $groups -Test {
             Param (
                 [string]$Name,
                 [string]$Parent
@@ -60,7 +69,7 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
             @{ Title = 'Sample Entry 09'; Parent = '/Group 02/Group 22/Group 221'; Icon = 'Scanner';  Username = 'User 09'; Password = '';                          Url = 'http://www.example.com' }
         )
 
-        It -Name 'Creating "<Title>" under "<Parent>"' -TestCases $entries -Test {
+        It -Name 'Creating "<Title>" Under "<Parent>"' -TestCases $entries -Test {
             Param (
                 [string]$Title,
                 [string]$Parent,
@@ -102,7 +111,6 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
                 [string]$Source,
                 [string]$Destination
             )
-
             { Move-KeePassEntry -KeePassDatabase $script:kpDB -Entry $Source -Destination $Destination } | Should -Not -Throw
         }
     }
@@ -115,7 +123,7 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
             @{ Source = 'Sample Entry 02'; Destination = '/Group 02/Group 22/Group 221'; AppendCopyToTitle = $true; UseReferences = $true;  IncludeHistory = $false }
         )
 
-        It -Name 'Copy "<Source>" to "<Destination>"' -TestCases $copyEntries -Test {
+        It -Name 'Copy "<Source>" To "<Destination>"' -TestCases $copyEntries -Test {
             Param (
                 [string]$Source,
                 [string]$Destination,
@@ -123,7 +131,6 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
                 [boolean]$UseReferences,
                 [boolean]$IncludeHistory
             )
-
             { Copy-KeePassEntry -KeePassDatabase $script:kpDB -Entry $Source -Destination $Destination -AppendCopyToTitle:$AppendCopyToTitle -UseReferences:$UseReferences -IncludeHistory:$IncludeHistory } | Should -Not -Throw
         }
     }
@@ -152,7 +159,7 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
             @{ Entry = '/Group 02/Sample Entry 06';          NewTitle = '';                 NewUsername = '';     NewPassword = 'SecurePassw0rd!'; NewIcon = 'Key'   }
             @{ Entry = '/Group 02/Group 22/Sample Entry 03'; NewTitle = 'Sample Entry 10';  NewUsername = 'John'; NewPassword = 'Passw0rd123';     NewIcon = 'Disk'  }
         )
-        
+
         It -Name 'Editing "<Entry>"' -TestCases $editEntries -Test {
             Param (
                 $Entry,
@@ -163,8 +170,37 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
             )
             $Uuid = (Test-KPIsValidEntry -KeePassDatabase $script:kpDB -InputObject $Entry).Uuid
             If ($NewPassword) { $securePassword = (ConvertTo-SecureString -String $NewPassword -AsPlainText -Force) }
-
             { Edit-KeePassEntry -KeePassDatabase $script:kpDB -Uuid $Uuid -Title $NewTitle -UserName $NewUsername -Password $securePassword -Icon $NewIcon} | Should -Not -Throw
+        }
+
+        It -Name 'Adding Attachment To "<NewTitle>"' -TestCases $editEntries -Test {
+            Param (
+                $Entry,
+                $NewTitle
+            )
+            If ([string]::IsNullOrEmpty($NewTitle)) { $NewTitle = $Entry }
+            $Uuid = (Test-KPIsValidEntry -KeePassDatabase $script:kpDB -InputObject $NewTitle).Uuid
+            { Add-KeePassAttachment -KeePassDatabase $script:kpDB -Uuid $Uuid -Path "$env:windir\win.ini" -OverwriteExisting } | Should -Not -Throw
+        }
+
+        It -Name 'Exporting Attachment From "<NewTitle>"' -TestCases $editEntries -Test {
+            Param (
+                $Entry,
+                $NewTitle
+            )
+            If ([string]::IsNullOrEmpty($NewTitle)) { $NewTitle = $Entry }
+            $Uuid = (Test-KPIsValidEntry -KeePassDatabase $script:kpDB -InputObject $NewTitle).Uuid
+            { Save-KeePassAttachment -KeePassDatabase $script:kpDB -Uuid $Uuid -Name 'win.ini' -Path $($env:Temp) -OverwriteExisting } | Should -Not -Throw
+        }
+
+        It -Name 'Remove Attachment From "<NewTitle>"' -TestCases $editEntries -Test {
+            Param (
+                $Entry,
+                $NewTitle
+            )
+            If ([string]::IsNullOrEmpty($NewTitle)) { $NewTitle = $Entry }
+            $Uuid = (Test-KPIsValidEntry -KeePassDatabase $script:kpDB -InputObject $NewTitle).Uuid
+            { Remove-KeePassAttachment -KeePassDatabase $script:kpDB -Uuid $Uuid -Name 'win.ini' } | Should -Not -Throw
         }
     }
 
@@ -179,7 +215,6 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
                 [string]$Source,
                 [string]$Destination
             )
-
             { Move-KeePassGroup -KeePassDatabase $script:kpDB -Group $Source -Destination $Destination } | Should -Not -Throw
         }
     }
@@ -190,7 +225,7 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
             @{ Source = '/Group 03/Group 21'; Destination = '/Group 02'; AppendCopyToTitle = $false; UseReferences = $false; IncludeHistory = $false }
         )
 
-        It -Name 'Copy "<Source> to "<Destination>"' -TestCases $copyGroups -Test {
+        It -Name 'Copy "<Source> To "<Destination>"' -TestCases $copyGroups -Test {
             Param (
                 [string]$Source,
                 [string]$Destination,
@@ -198,7 +233,6 @@ Describe -Name 'PowerShellKeePass Tests' -Fixture {
                 [boolean]$UseReferences,
                 [boolean]$IncludeHistory
             )
-
             { Copy-KeePassGroup -KeePassDatabase $script:kpDB -Group $Source -Destination $Destination -AppendCopyToTitle:$AppendCopyToTitle -UseReferences:$UseReferences -IncludeHistory:$IncludeHistory } | Should -Not -Throw
         }
 
@@ -235,7 +269,7 @@ line
 note
 '@ }
         )
-        
+
         It -Name 'Editing "<Group>"' -TestCases $editEntries -Test {
             Param (
                 $Group,
@@ -249,20 +283,29 @@ note
     }
 
     Context -Name 'Various Tests' -Fixture {
-        It -Name 'Empty the recycle bin' -Test {
-            { Clear-KeePassRecycleBin -KeePassDatabase $script:kpDB -Verbose } | Should -Not -Throw
+        It -Name 'Empty The Recycle Bin' -Test {
+            { Clear-KeePassRecycleBin -KeePassDatabase $script:kpDB } | Should -Not -Throw
+        }
+
+        It -Name 'Disable The Recycle Bin' -Test {
+            { Disable-KeePassRecycleBin -KeePassDatabase $script:kpDB -RemoveGroup } | Should -Not -Throw
         }
     }
 
-    Context -Name 'Show Current Tree View' -Fixture { Get-KeePassGroupTreeView -KeePassDatabase $script:kpDB -ShowEntries }
+    Context -Name 'Show Current Tree View' -Fixture {
+        Get-KeePassGroupTreeView -KeePassDatabase $script:kpDB -ShowEntries
+    }
 
     Context -Name 'Database File Clean Up' -Fixture {
-        It -Name 'Close KeePassDatabase' -Test {
+        It -Name 'Close KeePass Database' -Test {
             { Close-KeePassDatabase -KeePassDatabase $script:kpDB } | Should -Not -Throw
         }
 
-        It -Name 'Delete Test File' -Test {
-            { Remove-Item -Path $dbPath -Force } | Should -Not -Throw
+        It -Name 'Delete Test Files' -Test {
+            { Remove-Item -Path "$dbName-Password.kdbx"   -Force } | Should -Not -Throw
+            { Remove-Item -Path "$dbName-KeyFile.kdbx"    -Force } | Should -Not -Throw
+            { Remove-Item -Path "$dbName-WinAccount.kdbx" -Force } | Should -Not -Throw
+            { Remove-Item -Path "$env:Temp\win.ini"       -Force } | Should -Not -Throw    # Attachment test file
         }
     }
 }
