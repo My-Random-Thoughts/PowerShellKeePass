@@ -102,7 +102,7 @@
                     'UserName'        = $entry.Strings.ReadSafe('UserName')
                     'Password'        = $password
                     'PasswordQuality' = $passQual    # Also set below
-                    'Url'             = $entry.Strings.ReadSafe('Url')
+                    'Url'             = $entry.Strings.ReadSafe('URL')
                     'Notes'           = $entry.Strings.ReadSafe('Notes')
                     'FullPath'        = $entry.ParentGroup.GetFullPath('/', $true)
                     'Icon'            = ''    # Set below
