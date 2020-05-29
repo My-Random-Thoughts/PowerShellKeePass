@@ -1,10 +1,10 @@
-﻿Function Import-KeePassModule {
+Function Initialize-KeePassModule {
 <#
     .SYNOPSIS
-        Imports the KeePass assembly for use
+        Initializes the KeePass assembly for use
 
     .DESCRIPTION
-        Imports the KeePass assembly for use.  Also populates the Popular Password object which is used when calculating password complexity
+        Initializes the KeePass assembly for use.  Also populates the Popular Password object which is used when calculating password complexity
 
     .PARAMETER KeePassLocation
         Specifies the location of the KeePass executable file.  Defaults to the default install folder of 'C:\Program Files (x86)\KeePass Password Safe 2\KeePass.exe'
