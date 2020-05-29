@@ -5,4 +5,3 @@ $private = @( Get-ChildItem -Path "$PSScriptRoot\Private\*.ps1" -ErrorAction Sil
 @($Public + $Private) | ForEach-Object { . $_.fullname }
 
 Export-ModuleMember -Function $public.Basename
-Import-KeePassModule
