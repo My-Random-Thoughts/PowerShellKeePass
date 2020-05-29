@@ -9,7 +9,7 @@ The `\tests` folder there is a Pester script that will run through all the funct
 ## Getting Started
 1. Download and copy the module to the default module path, usually `C:\Program Files\Windows PowerShell\Modules\`
 2. Import the module using `Import-Module -Name 'PowerShellKeePass'`
-3. Import the KeePass Library using `Import-KeePassModule`.  If you have installed KeePass into its default folder, you can just type it as shown.  If KeePass is installed elsewhere, you'll need to add a path to the command: `Import-KeePassModule -Path 'path\to\KeePass.exe'`
+3. Initialize the KeePass Library using `Initialize-KeePassModule`.  If you have installed KeePass into its default folder, you can just type it as shown.  If KeePass is installed elsewhere, you'll need to add a path to the command: `Initialize-KeePassModule -Path 'path\to\KeePass.exe'`
 4. Start using the module in your scripts!
 
 ## Highlights
@@ -93,7 +93,7 @@ One of the parameters of some functions is the `-AsObject` parameter.  This will
 This example will create a new KeePass database and populate it with an example entry.
 
     Import-Module -Name 'PowerShellKeePass'
-    Import-KeePassModule
+    Initialize-KeePassModule
     $kpdb = (New-KeePassDatabase -FilePath 'C:\ExampleDatabase.kdbx' -MasterPassword 'Passw0rd!23' -KeeFile 'C:\KeeFile.txt')
     New-KeePassEntry -KeePassDatabase $kpdb -Title 'New Entry #1' -UserName 'Bob' -Icon 'Book'
     Close-KeePassDataBase -KeePassDatabase $kpdb
@@ -102,6 +102,6 @@ This example will create a new KeePass database and populate it with an example 
 This example will open an existing database and search for a specific entry.
 
     Import-Module -Name 'PowerShellKeePass'
-    Import-KeePassModule
+    Initialize-KeePassModule
     $kpdb = (Open-KeePassDatabase -FilePath 'C:\ExampleDatabase.kdbx' -MasterPassword 'Passw0rd!23' -KeeFile 'C:\KeeFile.txt')
     Find-KeePassEntry -KeePassDatabase $kpdb -SearchFor 'Sample Entry' -Field Title
