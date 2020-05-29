@@ -17,8 +17,8 @@ In the `\tests` folder there is a Pester script that will run through most the f
 In case you can't remember the group structure of your KeePass database, you can show the Tree view simple with the command `Get-KeePassGroupTreeView -KeePassDatabase $kpdb`.  The treeview for the default KeePass database is...
 
     ExampleDatabase
-    │  ├─ E: Sample Entry
-    │  └─ E: Sample Entry #2
+    ├─ E: Sample Entry
+    ├─ E: Sample Entry #2
     ├─ General
     ├─ Windows
     ├─ Network
