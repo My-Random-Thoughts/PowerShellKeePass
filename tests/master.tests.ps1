@@ -15,7 +15,10 @@ Import-Module -Name 'PowerShellKeePass'
 
 
 Describe -Name 'PowerShellKeePass Tests' -Fixture {
-[object]$script:kpDB = $null
+    [object]$script:kpDB = $null
+    BeforeAll -ScriptBlock {
+        Initialize-KeePassModule
+    }
 
     Context -Name 'Create New Databases' -Fixture {
         It -Name 'Create New KeePass Database Using A Password' -Test {
