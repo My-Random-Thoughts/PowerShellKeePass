@@ -133,13 +133,15 @@
         $passProfile.GeneratorType = $PSCmdlet.ParameterSetName
 
         If ($PSCmdlet.ParameterSetName -eq 'CharSet') {
+            [string]$commonParameters = (@([System.Management.Automation.PSCmdlet]::CommonParameters + [System.Management.Automation.PSCmdlet]::OptionalCommonParameters) -join '|')
             $setParams = @($PSBoundParameters.Keys | Where-Object {
-                $_ -notmatch 'CharactersOccurOnce|ExcludeLookalike|ExcludeCharacters|AsSecureString'
+                $_ -notmatch "CharactersOccurOnce|ExcludeLookalike|ExcludeCharacters|AsSecureString|$commonParameters"
             })
+
             If ($setParams.Count -le 1) {
-                Write-Warning -Message 'At least one character set must be selected, using defaults'
-                $Upper = $true
-                $Lower = $true
+                Write-Warning -Message 'At least one character set must be selected, using default of 32x uppercase, lowercase and digits'
+                $Upper  = $true
+                $Lower  = $true
                 $Digits = $true
             }
 
@@ -154,17 +156,17 @@
     Process {
         If ($PSCmdlet.ParameterSetName -eq 'CharSet') {
             $passProfile.Length = $Length
-            If ($Upper.IsPresent)     { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::UpperCase) }
-            If ($Lower.IsPresent)     { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::LowerCase) }
-            If ($Digits.IsPresent)    { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Digits)    }
-            If ($Minus.IsPresent)     { $passProfile.CharSet.Add('-') }
+            If (    $Upper.IsPresent) { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::UpperCase) }
+            If (    $Lower.IsPresent) { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::LowerCase) }
+            If (   $Digits.IsPresent) { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Digits)    }
+            If (    $Minus.IsPresent) { $passProfile.CharSet.Add('-') }
             If ($Underline.IsPresent) { $passProfile.CharSet.Add('_') }
-            If ($Space.IsPresent)     { $passProfile.CharSet.Add(' ') }
-            If ($Special.IsPresent)   { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Special)   }
-            If ($Brackets.IsPresent)  { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Brackets)  }
-            If ($Latin1.IsPresent)    { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Latin1S)   }
+            If (    $Space.IsPresent) { $passProfile.CharSet.Add(' ') }
+            If (  $Special.IsPresent) { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Special)   }
+            If ( $Brackets.IsPresent) { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Brackets)  }
+            If (   $Latin1.IsPresent) { $passProfile.CharSet.Add([KeePassLib.Cryptography.PasswordGenerator.PwCharSet]::Latin1S)   }
 
-            Write-Debug -Message "Using the follwing character set: $($passProfile.CharSet.ToString())"
+            Write-Verbose -Message "Using the follwing character set: $($passProfile.CharSet.ToString())"
         }
         Else {
             If ($Pattern) { $passProfile.Pattern = $Pattern }
