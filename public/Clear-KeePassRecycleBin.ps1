@@ -30,15 +30,15 @@
             Throw 'The KeePass database specified is not open'
         }
 
-        If (-not $KeePassDatabase.RecycleBinEnabled)              { Return $null }
-        If (     $KeePassDatabase.RecycleBinUuid.UuidBytes -eq 0) { Return $null }
         [KeePassLib.PwGroup]$kpRecycleBin = $($KeePassDatabase.RootGroup.FindGroup($KeePassDatabase.RecycleBinUuid, $true))
     }
 
     Process {
-        $kpRecycleBin.DeleteAllObjects($KeePassDatabase)
-        $KeePassDatabase.RecycleBinChanged = (Get-Date)
-        $KeePassDatabase.Save($null)
+        If ($kpRecycleBin) {
+            $kpRecycleBin.DeleteAllObjects($KeePassDatabase)
+            $KeePassDatabase.RecycleBinChanged = (Get-Date)
+            $KeePassDatabase.Save($null)
+        }
     }
 
     End {

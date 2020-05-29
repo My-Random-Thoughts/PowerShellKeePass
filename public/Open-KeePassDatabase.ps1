@@ -63,7 +63,7 @@
         $connectionInfo.Path = $FilePath
 
         If ($PSCmdlet.ParameterSetName -eq 'separate') {
-            $CompositeKey = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount $UseWindowsUserAccount.IsPresent)
+            $CompositeKey = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount:$($UseWindowsUserAccount.IsPresent))
         }
     }
 

@@ -49,7 +49,7 @@
 
         # Set up the required variables
         $PwDatabase     = (New-Object -TypeName 'KeePassLib.PwDatabase')
-        $compositeKey   = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount $($UseWindowsUserAccount.IsPresent))
+        $compositeKey   = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount:$($UseWindowsUserAccount.IsPresent))
         $connectionInfo = (New-Object -TypeName 'KeePassLib.Serialization.IOConnectionInfo')
         $connectionInfo.Path = $FilePath
     }

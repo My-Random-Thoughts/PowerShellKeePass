@@ -9,6 +9,9 @@
     .PARAMETER KeePassDatabase
         Specifies the KeePass database object to use
 
+    .PARAMETER DestinationDatabase
+        Specfied the destination KeePass database object to move too.  UseReferences can not be used when setting this parameter
+
     .PARAMETER Group
         Specifies the group to copy
 
@@ -37,10 +40,13 @@
         https://github.com/My-Random-Thoughts/PowerShellKeePass
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = '__default')]
     Param (
         [Parameter(Mandatory = $true)]
         [KeePassLib.PwDatabase]$KeePassDatabase,
+
+        [Parameter(ParameterSetName = 'DestinationDatabase')]
+        [KeePassLib.PwDatabase]$DestinationDatabase = $KeePassDatabase,
 
         [Parameter(Mandatory = $true)]
         [object]$Group,
@@ -50,18 +56,18 @@
 
         [switch]$AppendCopyToTitle,
 
+        [Parameter(ParameterSetName = 'UseReferences')]
         [switch]$UseReferences,
 
         [switch]$IncludeHistory
     )
 
     Begin {
-        If ($KeePassDatabase.IsOpen -eq $false) {
-            Throw 'The KeePass database specified is not open'
-        }
+        If ($KeePassDatabase.IsOpen     -eq $false) { Throw "The KeePass database '$($KeePassDatabase.Name)' is not open"     }
+        If ($DestinationDatabase.IsOpen -eq $false) { Throw "The KeePass database '$($DestinationDatabase.Name)' is not open" }
 
-        [KeePassLib.PwGroup]$retSource      = (Test-KPIsValidGroup -KeePassDatabase $KeePassDatabase -InputObject $Group       -ErrorAction Stop)
-        [KeePassLib.PwGroup]$retDestination = (Test-KPIsValidGroup -KeePassDatabase $KeePassDatabase -InputObject $Destination -ErrorAction Stop)
+        [KeePassLib.PwGroup]$retSource      = (Test-KPIsValidGroup -KeePassDatabase $KeePassDatabase     -InputObject $Group       -ErrorAction Stop)
+        [KeePassLib.PwGroup]$retDestination = (Test-KPIsValidGroup -KeePassDatabase $DestinationDatabase -InputObject $Destination -ErrorAction Stop)
         Write-Verbose -Message "Copying '/$($retSource.GetFullPath('/', $false))' to '/$($retDestination.GetFullPath('/', $false))'"
     }
 
@@ -77,8 +83,7 @@
                 $dupEntry.Strings.Set('Title', (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $title)))
             }
 
-#TODO:
-#            If ($UseReferences.IsPresent) {
+#TODO:       If (($KeePassDatabase -eq $DestinationDatabase) -and ($UseReferences.IsPresent)) {
 #                [string]$username = "{REF:U@I:$($retSource.Uuid.ToHexString())}"
 #                $dupEntry.Strings.Set('UserName', (New-Object -TypeName 'KeePassLib.Security.ProtectedString'($true, $username)))
 #
@@ -92,8 +97,10 @@
 
             $dupEntry.Touch($true, $false)
         }
+
         $dupGroup.Touch($true, $true)
         $KeePassDatabase.Save($null)
+        $DestinationDatabase.Save($null)
     }
 
     End {

@@ -50,7 +50,7 @@
     Process {
         Try {
             If ($PSCmdlet.ShouldProcess('Database Master Key', 'Setting new master key')) {
-                $KeePassDatabase.MasterKey = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount $UseWindowsUserAccount.IsPresent)
+                $KeePassDatabase.MasterKey = (New-KPCompositeKey -MasterPassword $MasterPassword -KeyFile $KeyFile -UseWindowsUserAccount:$($UseWindowsUserAccount.IsPresent))
                 $KeePassDatabase.MasterKeyChanged = (Get-Date)
                 $KeePassDatabase.Save($null)
                 Write-Verbose -Message 'Master password has been changed'
