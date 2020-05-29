@@ -4,7 +4,7 @@ PowerShell 5 module for KeePass automation and manipulation
 ## Introduction
 This module allows for the manipulation of a KeePass database that can be incorporated into scripts and toolsets for automation.  It could also be used as a command line tool if you don't want to use the GUI.  The only requirement for this module is that the latest KeePass version 2.xx is installed.  Get it from https://keepass.info/download.html
 
-The `\tests` folder there is a Pester script that will run through all the functions of the module and ensure that they are all working correctly.
+In the `\tests` folder there is a Pester script that will run through most the functions of the module and ensure that they are all working correctly.
 
 ## Getting Started
 1. Download and copy the module to the default module path, usually `C:\Program Files\Windows PowerShell\Modules\`
