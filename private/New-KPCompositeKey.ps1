@@ -4,7 +4,7 @@
         Creates a new database composite key
 
     .DESCRIPTION
-        Creates a new database composite key used for locking and unlocking a secure database file
+        Creates a new database composite key used for locking and unlocking a secure database file.  At least one authentication method must been used
 
     .PARAMETER MasterPassword
         If specified, will use a password to help unlock a database
@@ -13,7 +13,7 @@
         If specified, will use the key file to help unlock a database
 
     .PARAMETER UseWindowsUserAccount
-        If set to $true, will use the currently logged on user account to help unlock a database
+        If specified, will use the currently logged on user account to help unlock a database
 
     .EXAMPLE
         New-KPCompositeKey -MasterPassword 'Passw0rd'
@@ -23,9 +23,6 @@
 
     .EXAMPLE
         New-KPCompositeKey -MasterPassword 'Password' -UseWindowsUserAccount
-
-    .EXAMPLE
-        New-KPCompositeKey
 
     .NOTES
         For additional information please see my GitHub wiki page
@@ -40,12 +37,12 @@
 
         [string]$KeyFile = $null,
 
-        [boolean]$UseWindowsUserAccount = $false
+        [switch]$UseWindowsUserAccount
     )
 
     Begin {
         # Check at least one authentication method has been used
-        If ((-not $MasterPassword) -and (-not $KeyFile) -and (-not $UseWindowsUserAccount)) {
+        If ((-not $MasterPassword) -and (-not $KeyFile) -and (-not $UseWindowsUserAccount.IsPresent)) {
             Throw 'At least one authentication method must be used'
         }
     }
@@ -69,11 +66,7 @@
             }
         }
 
-#TODO:   If ($CustomKey) {
-#            $compositeKey.AddUserKey(([KeePassLib.Keys.KcpCustomKey]::New('null', $null, $false)))
-#        }
-
-        If ($UseWindowsUserAccount) {
+        If ($UseWindowsUserAccount.IsPresent) {
             $compositeKey.AddUserKey(
                 (New-Object -TypeName 'KeePassLib.Keys.KcpUserAccount')
             )
