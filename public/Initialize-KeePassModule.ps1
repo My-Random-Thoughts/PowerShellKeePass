@@ -10,10 +10,10 @@ Function Initialize-KeePassModule {
         Specifies the location of the KeePass executable file.  Defaults to the default install folder of 'C:\Program Files (x86)\KeePass Password Safe 2\KeePass.exe'
 
     .EXAMPLE
-        Import-KeePassModule
+        Initialize-KeePassModule
 
     .EXAMPLE
-        Import-KeePassModule -KeePassLocation 'X:\KeePassInstall\KeePass.exe'
+        Initialize-KeePassModule -KeePassLocation 'X:\KeePassInstall\KeePass.exe'
 
     .NOTES
         For additional information please see my GitHub wiki page
