@@ -139,7 +139,7 @@
             })
 
             If ($setParams.Count -le 1) {
-                Write-Warning -Message 'At least one character set must be selected, using default of 32x uppercase, lowercase and digits'
+                Write-Warning -Message 'At least one character set must be selected, using default of uppercase, lowercase and digits'
                 $Upper  = $true
                 $Lower  = $true
                 $Digits = $true
